@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pato.app"),
+  metadataBase: new URL("https://pato-paytogether.vercel.app"),
 
   title: {
     default: "PaTo — Pay Together",
@@ -93,7 +93,20 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      {
+        url: "/favicon.ico",
+      },
+      {
+        url: "/favicon.svg",
+        type: "image/svg+xml",
+      },
+      {
+        url: "/favicon-96x96.png",
+        sizes: "96x96",
+        type: "image/png",
+      },
+    ],
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
