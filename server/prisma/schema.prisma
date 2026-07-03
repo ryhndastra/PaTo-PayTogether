@@ -1,13 +1,175 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum EventRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum EventStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum ExpenseCategory {
+  FOOD
+  TRANSPORT
+  ACCOMMODATION
+  SHOPPING
+  ENTERTAINMENT
+  OTHER
+}
+
+enum SplitType {
+  EQUAL
+  CUSTOM
+  PERCENTAGE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REJECTED
+}
+
+model Profile {
+  id        String  @id
+  email     String  @unique
+  fullName  String?
+  username  String? @unique
+  avatarUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedEvents Event[]       @relation("EventOwner")
+  memberships EventMember[]
+  expenses    Expense[]
+}
+
+model Event {
+  id String @id @default(cuid())
+
+  ownerId String
+  owner   Profile @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  coverImage  String?
+
+  inviteCode String @unique
+
+  currency String @default("IDR")
+
+  status EventStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  EventMember[]
+  expenses Expense[]
+
+  @@index([ownerId])
+}
+
+model EventMember {
+  id String @id @default(cuid())
+
+  eventId   String
+  profileId String
+
+  role EventRole @default(MEMBER)
+
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  expenseSplits ExpenseSplit[]
+
+  @@unique([eventId, profileId])
+  @@index([profileId])
+}
+
+model Expense {
+  id String @id @default(cuid())
+
+  eventId     String
+  createdById String
+
+  title       String
+  description String?
+
+  category ExpenseCategory @default(OTHER)
+
+  amount     Decimal @db.Decimal(14, 2)
+  paidAmount Decimal @default(0) @db.Decimal(14, 2)
+
+  receiptUrl String?
+
+  splitType SplitType @default(EQUAL)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdBy Profile @relation(fields: [createdById], references: [id])
+
+  splits ExpenseSplit[]
+
+  @@index([eventId])
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model ExpenseSplit {
+  id String @id @default(cuid())
+
+  expenseId String
+  memberId  String
+
+  amount Decimal @db.Decimal(14, 2)
+
+  paymentStatus PaymentStatus @default(PENDING)
+
+  isSettled Boolean @default(false)
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  member EventMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  payment Payment?
+
+  @@unique([expenseId, memberId])
+  @@index([memberId])
+}
+
+model Payment {
+  id String @id @default(cuid())
+
+  expenseSplitId String @unique
+
+  proofUrl String?
+
+  note String?
+
+  status PaymentStatus @default(PENDING)
+
+  paidAt DateTime?
+
+  verifiedAt DateTime?
+  verifiedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenseSplit ExpenseSplit @relation(fields: [expenseSplitId], references: [id], onDelete: Cascade)
 }
