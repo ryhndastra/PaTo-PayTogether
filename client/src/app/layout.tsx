@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 
 import { LenisProvider } from "@/components/providers/LenisProvider";
 
@@ -130,6 +131,8 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <LenisProvider>{children}</LenisProvider>
+
+        <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   );
