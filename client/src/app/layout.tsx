@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { LenisProvider } from "@/components/providers/LenisProvider";
-
+import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -130,7 +130,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full">
-        <LenisProvider>{children}</LenisProvider>
+        <AuthProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </AuthProvider>
 
         <Toaster position="top-center" richColors closeButton />
       </body>

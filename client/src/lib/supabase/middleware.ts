@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const protectedPrefixes = ["/dashboard"];
+
+const authPrefixes = ["/login", "/register"];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request,
@@ -32,7 +36,29 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+
+  const isProtectedRoute = protectedPrefixes.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
+
+  const isAuthRoute = authPrefixes.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
+
+  // Belum login tapi buka halaman yang diproteksi
+  if (!user && isProtectedRoute) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Sudah login tapi buka halaman auth
+  if (user && isAuthRoute) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
   return response;
 }
